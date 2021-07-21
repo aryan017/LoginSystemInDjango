@@ -3,7 +3,9 @@ from django.http  import HttpResponse
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.shortcuts import redirect
-from django.contrib.auth import authenticate,login
+from django.contrib.auth import authenticate,login,logout
+from loginsystem import settings
+from django.core.mail import send_mail
 
 
 def home(request):
@@ -19,13 +21,41 @@ def signup(request):
         pass1=request.POST['pass1']
         pass2=request.POST['pass2']
 
+        if User.objects.filter(username=username):
+            messages.error(request,"Username already exists, Please try some other name")
+            return redirect('home')
+
+        if User.objects.filter(email=email):
+            messages.error(request, "Email already Registered, Please try some other email")
+            return redirect('home')
+
+        if len(username)>10:
+            messages.error(request, "Username must be under 10 characters")
+
+        if pass1!=pass2:
+            messages.error(request, "Password didn't exists")
+
+        if not username.isalnum():
+            messages.error(request, "Username must be Alphanumeric")
+            return redirect('home')
+
         myuser=User.objects.create_user(username, email, pass1)
         myuser.first_name=fname
         myuser.last_name=lname
 
         myuser.save()
 
-        messages.success(request, "Your account has been successfully created")
+        messages.success(request, "Your account has been successfully created, We have sent you a confirmation emial, Please click on it in order to activate your account ")
+
+        # Welcome Email
+        
+        subject="Welcome to Aryan's Site - Django login"
+        message = "Hello" + myuser.first_name + "|| \n" + "Welcome to Aryan's Site!! \n Thank you for visiting our site \n We have also sent you a confirmation email, please confirm your email address to activate your account. \n\n Thank You \n "
+        from_email=settings.EMAIL_HOST_USER
+        to_list=[myuser.email]
+        send_email(subject,message,from_email,to_list,fail_silently=True)
+
+
         return redirect("signin")
     return render(request, "authentication/signup.html")
 
@@ -50,4 +80,7 @@ def signin(request):
     return render(request, "authentication/signin.html")
 
 def signout(request):
-    pass
+    logout(request)
+    messages.success(request,"Loggesd out Successfully")
+    return redirect("home")
+
