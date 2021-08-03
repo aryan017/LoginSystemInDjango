@@ -25,9 +25,7 @@ def signup(request):
             messages.error(request,"Username already exists, Please try some other name")
             return redirect('home')
 
-        if User.objects.filter(email=email):
-            messages.error(request, "Email already Registered, Please try some other email")
-            return redirect('home')
+      
 
         if len(username)>10:
             messages.error(request, "Username must be under 10 characters")
@@ -53,7 +51,7 @@ def signup(request):
         message = "Hello" + myuser.first_name + "|| \n" + "Welcome to Aryan's Site!! \n Thank you for visiting our site \n We have also sent you a confirmation email, please confirm your email address to activate your account. \n\n Thank You \n "
         from_email=settings.EMAIL_HOST_USER
         to_list=[myuser.email]
-        send_email(subject,message,from_email,to_list,fail_silently=True)
+        send_mail(subject,message,from_email,to_list,fail_silently=True)
 
 
         return redirect("signin")
